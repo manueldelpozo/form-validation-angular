@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Language" content="en">
+		<meta charset="UTF-8">
+		<title>Form Validation</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+		<style>
+            .ng-valid.ng-dirty{
+                border-color: rgb(0,255,0);
+            }
+            .ng-invalid.ng-dirty{
+                border-color: rgb(255,0,0);
+            }
+        </style>
+		<!-- support HTML5 for IE8 -->
+	    <!--[if lt IE 9]>
+	      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+	      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+	    <![endif]-->
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+
+		<script>
+			// define angular module/app
+		    var formApp = angular.module('formApp', []);
+		    // create angular controller and pass in $scope and $http
+		    function formController($scope, $http) {
+		      	// create a blank object to hold our form information
+		      	// $scope will allow this to pass between controller and view
+		      	$scope.formData = {};
+		      	// process the form
+		     	$scope.processForm = function() {
+		     		console.log($scope.formData);
+					$http({
+						method  : 'POST',
+						url     : 'api.php',
+						data    : $.param($scope.formData),  // pass in data as strings
+						headers : { 
+							'Content-Type': 'application/x-www-form-urlencoded', 
+							'Content-Transfer-Encoding': 'utf-8' // UTF8 encoding must be used for each text file
+						}  
+					})
+					.then(
+						function success(response) {
+							// 200 OK
+							var data = response.data;
+							if (!data.success) {
+							// if API back errors, bind errors to error variables
+							  	$scope.errorEmail = data.errors.email;
+							  	$scope.errorPassword = data.errors.password;
+							} else {
+							// if all is successful, change html container
+							  	$('.container').children().html('<div class="page-header text-center"><h1><span class="glyphicon glyphicon-bullhorn"></span> ACCESS GRANTED</h1></div><div class="logout text-center"><a class="btn btn-default btn-lg btn-block" href="index.html"><span class="glyphicon glyphicon-log-out"></span> Log out</a></div>');
+							}
+						},
+						function error(response) {
+							// Error HTTP Status
+							var status = response.status;
+					        if (status == 400)
+						  		$scope.message = "Bad request";
+						  	else if (status == 401)
+						  		$scope.message = "Invalid login or password";
+						  	else if (status == 500)
+						  		$scope.message = "Server error";
+						}
+					);
+			    };
+		    }
+		</script>
+
+	</head>
+	<body ng-app="formApp" ng-controller="formController">
+
+		<div class="container">
+			<div class="col-md-6 col-md-offset-3">
+
+				<div class="page-header">
+					<h1><span class="glyphicon glyphicon-ok"></span> Form Validation</h1>
+				</div>
+
+				<div id="messages" class="well" ng-show="message">{{ message }}</div>
+
+				<form ng-submit="processForm()">
+					
+					<div id="email-group" class="form-group" ng-class="{ 'has-error' : errorEmail }">
+						<label>Email</label>
+						<input type="text" name="email" id="email" ng-model="formData.email" class="form-control" placeholder="Your email here" >
+                    	<span class="help-block" ng-show="errorEmail">{{ errorEmail }}</span>
+					</div>
+
+					<div id="password-group" class="form-group" ng-class="{ 'has-error' : errorPassword }">
+						<label>Password</label>
+						<input type="password" name="password" id="password" class="form-control" placeholder="Your password here" ng-model="formData.password">
+						<span class="help-block" ng-show="errorPassword">{{ errorPassword }}</span>
+					</div>
+
+					<button type="submit" class="btn btn-success btn-lg btn-block">
+						<span class="glyphicon glyphicon-flash"></span> Submit!
+					</button>
+				</form>
+
+				<pre class="text-center">Request format: {{ formData }}</pre>
+
+			</div>
+		</div>
+
+    </body>    
+</html>                                		
